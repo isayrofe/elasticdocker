@@ -1,0 +1,1 @@
+openssl x509 -fingerprint -sha256 -noout -in ./ca.crt | awk -F"=" {' print $2 '} | sed s/://q
