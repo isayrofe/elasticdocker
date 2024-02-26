@@ -1,0 +1,8 @@
+from django.apps import AppConfig
+
+
+class MaterialesConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'materiales'
+    def ready(self):
+        import materiales.signals
