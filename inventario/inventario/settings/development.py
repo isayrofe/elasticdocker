@@ -80,7 +80,7 @@ DATABASES = {
 
 ELASTIC_APM = {
     'SERVICE_NAME': 'django-inventarios',
-    'SERVER_URL': 'http://192.168.33.11:8200',
+    'SERVER_URL': 'http://fleet-server:8200',
     'SECRET_TOKEN': 'supersecrettoken',
     'ENVIRONMENT': 'development',
     'DEBUG': True

@@ -1,4 +1,4 @@
-FROM python:latest
+FROM python:3.13.0a4-slim
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
