@@ -21,7 +21,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles/')
 
 
 #SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -37,3 +37,12 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT'),
     }
 }
+
+ELASTIC_APM = {
+    'SERVICE_NAME': 'django-inventarios',
+    'SERVER_URL': 'http://fleet-server:8200',
+    'SECRET_TOKEN': 'supersecrettoken',
+    'ENVIRONMENT': 'development',
+}
+
+AUTH_USER_MODEL = 'materiales.CustomUser'

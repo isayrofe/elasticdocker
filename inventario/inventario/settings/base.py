@@ -41,7 +41,7 @@ BASE_APPS =[
     'djoser',
     'materiales',
     'rest_framework_serializer_extensions',
-    'activity_log',
+    #'activity_log',
     #'rest_framework.authtoken',
     'django_filters',
     'elasticapm.contrib.django',
@@ -69,7 +69,7 @@ BASE_MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'activity_log.middleware.ActivityLogMiddleware',
+    #'activity_log.middleware.ActivityLogMiddleware',
     
 ]
 
