@@ -86,7 +86,7 @@ def external_token_required(view_func):
     def wrapper(request, *args, **kwargs):
         # Obtener el token externo de la solicitud (supongamos que está en el encabezado)
         external_token = request.headers.get('Authorization')  # Ajusta esto según cómo recibes el token
-        #external_token = "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvIjoiYWRtaW5pc3RyYWRvckBzZW1vdmlvYXhhY2EuZ29iLm14IiwidXN1YXJpb19pZCI6IjEiLCJyb2wiOjEsImFwbGljYWNpb24iOjEsImFyZWEiOiIxIiwibW9kdWxvIjoiNSIsIm1vZHVsb19ub21icmUiOiJNw5NEVUxPIENBUkxPUyBHUkFDSURBIiwicGVyc29uYSI6IjEiLCJwZXJzb25hX25vbWJyZSI6IkFETUlOSVNUUkFET1IgREVMIFNJU1RFTUEiLCJub21icmVfYXBsaWNhY2lvbiI6InNlcnZpY2lvcyIsImlhdCI6MTcwNzkyNDczMywiZXhwIjoxNzA3OTQyNzMzfQ.BK3N_4_6OBh0GZ0jBGRZZyF3xr8-fxCbMxhZPkGdphBOyVGnpAwvrkdL55a97kaFbk1DYBXrSwp3A_UkGtd6jDphXAUvblgo0TFW6PTkJDDoZIHgKBeQZd7EXRdGzBWwCHp00-o_aHd485HGY2569I5SEoyA2GGb3uboM_HNzAbBg8-ENVYj3pEOpR0WdNd_pK9ObxIymtWPV_9jCfQGKPZV82VgmcoWLEQFoFmmWj-yJtvdvbahNbFFyhWclSs05Od4XzM3K_HxGCCDhoo00vCc_ipXW05khCW_nNo3cjgvnvIeQNVKPJ4HbttYwFkJPUqYrMNAcRyYYTtpjl-vQQ"
+        external_token = "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvIjoiYWRtaW5pc3RyYWRvckBzZW1vdmlvYXhhY2EuZ29iLm14IiwidXN1YXJpb19pZCI6IjEiLCJyb2wiOjEsImFwbGljYWNpb24iOjEsImFyZWEiOiIxIiwibW9kdWxvIjoiNSIsIm1vZHVsb19ub21icmUiOiJNw5NEVUxPIENBUkxPUyBHUkFDSURBIiwicGVyc29uYSI6IjEiLCJwZXJzb25hX25vbWJyZSI6IkFETUlOSVNUUkFET1IgREVMIFNJU1RFTUEiLCJub21icmVfYXBsaWNhY2lvbiI6InNlcnZpY2lvcyIsImlhdCI6MTcwOTIwMjg2NSwiZXhwIjoxNzA5MjIwODY1fQ.KXRN-8Tv78HO2d4ZHftsk8w_b3Q6yjwE8VnVRGT7BK86VTKXK77Oth32XD_mTd9GAFVXduCGs_AbNfnFPcezg5dVqqWUB4x8Y2lO2VstLPuSxxb0doW5NsWfQBDo2LPSnkys1v4S4MaHWDcJVdpjoaXjsCSr-OZWxxvBzuOdNw66eNpO3YLPtqLBvWedC-4gXQ5Hpk7MCnOrhV-St6boYQ5k6ypo_E2xlz8lW8w5PRWSdzvcrsD-M0axC_N5DjfWBU5q3yhVZiwc4PmJdswW06MNC5IGPDDceVaeeCmzBp1IdFn4Finahz_StV-c1e0fpRKHhgMAJ7h9eLyRAv0AFA"
         response = requests.post('http://172.80.8.188:1336/api/usuario/perfil', headers={'Authorization': f'{external_token}'})
         # Verificar el token externo (aquí deberías implementar tu lógica de validación)
         if (response.status_code == 200) and (response.json() is not None):  # Implementa esta función de validación
@@ -99,8 +99,8 @@ def external_token_required(view_func):
                 #response.headers.pop('Authorization', None)
                 # Verificar si el usuario está activo
                 
-                if request.user.is_authenticated and request.user.username == user.username:
-                   return view_func(request, *args, **kwargs)
+                # if request.user.is_authenticated and request.user.username == user.username:
+                #    return view_func(request, *args, **kwargs)
                 # Loguear al usuario
                 login(request, user)
                 return view_func(request, *args, **kwargs)

@@ -23,5 +23,6 @@ urlpatterns = [
     path('movimientos/', views.MovimientosView.as_view(), name='movimientos'),
     path('almacenmov/', views.MovimientosAlmacenView.as_view()),
     path('usuarios/', views.UsuariosView.as_view()),
+    path('solicitudcombinada/', views.SolicitudesCombinadasListCreateView.as_view()),
     #path('vale/', views.ValeListCreateView.as_view()),
 ]

@@ -7,10 +7,10 @@ from django.db import connection
 from django.utils.decorators import method_decorator
 from .serializers import (
     AlmacenSerializer, CatalogoSerializer, MovimientosAlmacenSerializer, OrdenEntradaSerializer,
-    OrdenSalidaSerializer, SolicitudSerializer, UnidadSerializer,
+    OrdenSalidaSerializer, SolicitudCombinadaSerializer, SolicitudSerializer, SolicitudesSerializer, UnidadSerializer,
     ProveedorSerializer, ValeSerializer, DetalleEntradaSerializer,
     DetalleSalidaSerializer, MovimientosSerializer, MovimientosAlmacenQuerySerializer,
-    UsuariosSerializer
+    UsuariosSerializer, DetalleSolicitudSerializer
 )
 from .models import (
     Almacen, Catalogo, Orden_Entrada, Orden_Salida,
@@ -316,6 +316,11 @@ class SolicitudListCreateView(generics.ListCreateAPIView):
     def dispatch(self, request, *args, **kwargs):
         self.user = request.user
         return super().dispatch(request, *args, **kwargs)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.user  # Añadir el usuario al contexto del serializador
+        return context
     
     queryset = Solicitud.objects.all()
     serializer_class = SolicitudSerializer
@@ -513,6 +518,21 @@ class MovimientosView(generics.ListAPIView):
 #         serializer = self.serializer_class(queryset, many=True)
 #         return Response(serializer.data)
 #@method_decorator(external_token_required, name='dispatch')
+
+class UsuariosView(generics.ListAPIView):
+    def dispatch(self, request, *args, **kwargs):
+        self.user = request.user
+        return super().dispatch(request, *args, **kwargs)
+
+    queryset = CustomUser.objects.all()
+    serializer_class = UsuariosSerializer
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        usuario, dispositivo, ip = obtener_info_solicitud(request, self)
+        logger.info(f'Nuevo usuario creado: {request.data}. Usuario: {usuario}, Dispositivo: {dispositivo}, IP: {ip}')
+        return response
+    
 class MovimientosAlmacenView(generics.ListAPIView):
     serializer_class = MovimientosAlmacenQuerySerializer
 
@@ -592,16 +612,106 @@ class MovimientosAlmacenView(generics.ListAPIView):
         ]
         return queryset_dicts
 
-class UsuariosView(generics.ListAPIView):
-    def dispatch(self, request, *args, **kwargs):
-        self.user = request.user
-        return super().dispatch(request, *args, **kwargs)
+class SolicitudesCombinadasListCreateView(generics.ListCreateAPIView):
+    serializer_class = SolicitudesSerializer
 
-    queryset = CustomUser.objects.all()
-    serializer_class = UsuariosSerializer
+    def get_queryset(self):
+        solicitud_id = self.request.query_params.get('id_solicitud', None)
+        fecha = self.request.query_params.get('fecha', None)
+        fecha_inicio = self.request.query_params.get('fecha_inicio', None)
+        fecha_fin = self.request.query_params.get('fecha_fin', None)
+        cantidad_registros = self.request.query_params.get('cantidad_registros', None)
 
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        usuario, dispositivo, ip = obtener_info_solicitud(request, self)
-        logger.info(f'Nuevo usuario creado: {request.data}. Usuario: {usuario}, Dispositivo: {dispositivo}, IP: {ip}')
-        return response
+        # Consulta SQL personalizada para obtener el resultado deseado
+        query = """
+            SELECT
+                S.id AS id_solicitud,
+                S.fecha,
+                S.tipo,
+                S.estado,
+                S.usuario_id AS usuario,
+                U.username AS nombre_usuario,
+                S.descripcion,
+                U.area,
+                U.persona_nombre AS responsable,
+                DS.id AS id_detalle_solicitud,
+                DS.catalogo_id AS catalogo,
+                DS.personalizado,
+                DS.cantidad,
+                C.nombre AS nombre_articulo,
+                COALESCE(DSAL.cantidad, 0) AS cantidad_orden_salida,
+                DSAL.fecha_orden AS fecha_orden_salida
+            FROM
+                materiales_solicitud AS S
+            JOIN
+                materiales_customuser AS U ON S.usuario_id = U.id
+            JOIN
+                materiales_detalles_solicitud AS DS ON S.id = DS.solicitud_id
+            JOIN
+                materiales_catalogo AS C ON DS.catalogo_id = C.id
+            LEFT JOIN
+                materiales_orden_salida AS OS ON S.id = OS.solicitud_id
+            LEFT JOIN
+                (
+                    SELECT
+                        DSO.orden_id,
+                        DSO.almacen_id,
+                        SUM(DSO.cantidad) AS cantidad,
+                        MAX(OS.fecha_orden) AS fecha_orden
+                    FROM
+                        materiales_detalle_salida AS DSO
+                    JOIN
+                        materiales_orden_salida AS OS ON DSO.orden_id = OS.id
+                    GROUP BY
+                        DSO.orden_id,
+                        DSO.almacen_id
+                ) AS DSAL ON OS.id = DSAL.orden_id AND DS.catalogo_id = DSAL.almacen_id
+                WHERE
+                     ("""+ ("{} IS NULL OR {} = S.id_solicitud".format(solicitud_id, solicitud_id) if solicitud_id is not None else "1=1") +""")
+                AND ("""+ ("{} IS NULL OR {} = S.fecha".format(fecha, fecha) if fecha is not None else "1=1") +""")
+                AND ("""+ ("{} IS NULL OR {} <= S.fecha".format(fecha_inicio, fecha_inicio) if fecha_inicio is not None else "1=1") +""")
+                AND ("""+ ("{} IS NULL OR {} >= S.fecha".format(fecha_fin, fecha_fin) if fecha_fin is not None else "1=1") +""")
+                ORDER BY
+                S.id DESC
+                 """ + ("LIMIT {}".format(cantidad_registros) if cantidad_registros is not None else "") + """
+        """
+
+        # Ejecutar la consulta SQL personalizada
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            queryset = cursor.fetchall()
+       # Diccionario para almacenar los resultados agrupados por ID de solicitud
+        queryset_dict = {}
+
+        # Iterar sobre los resultados de la consulta y agrupar los detalles por solicitud
+        for item in queryset:
+            solicitud_id = item[0]
+            detalle_solicitud_dict = {
+                'id_Detalle_Solicitud': item[9],
+                'catalogo': item[10],
+                'producto_personalizado': item[11],
+                'cantidad': item[12],
+                'nombre_articulo': item[13],
+                'cantidad_orden_salida': item[14],
+                'fecha_orden_salida': item[15]
+            }
+            if solicitud_id not in queryset_dict:
+                # Si es la primera vez que se encuentra esta solicitud, crear una nueva entrada en el diccionario
+                solicitud_dict = {
+                    'id_solicitud': item[0],
+                    'fecha': item[1],
+                    'tipo': item[2],
+                    'estado': item[3],
+                    'usuario': item[4],
+                    'nombre_usuario': item[5],
+                    'descripcion': item[6],
+                    'area': item[7],
+                    'responsable': item[8],
+                    'detalles_solicitud': [detalle_solicitud_dict]
+                }
+                queryset_dict[solicitud_id] = solicitud_dict
+            else:
+                # Si la solicitud ya existe en el diccionario, agregar el detalle al listado existente
+                queryset_dict[solicitud_id]['detalles_solicitud'].append(detalle_solicitud_dict)
+
+        return list(queryset_dict.values())

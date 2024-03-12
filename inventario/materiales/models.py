@@ -55,12 +55,27 @@ class Detalle_Entrada(models.Model):
     almacen = models.ForeignKey(Almacen, on_delete=models.CASCADE, default=0)
     cantidad = models.IntegerField()
 
+    
+class CustomUser(AbstractUser):
+    area = models.CharField(max_length=50, default="")
+    modulo = models.CharField(max_length=50, default="")
+    persona_nombre = models.CharField(max_length=50, default="")
+
 class Solicitud(models.Model):
     fecha = models.DateField()
     tipo = models.CharField(max_length=50, default="requisicion")
     descripcion = models.CharField(max_length=400, default="")
     estado = models.CharField(max_length=50, default="pendiente")
-
+    usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE, default=1)
+    
+class Orden_Salida(models.Model):
+    fecha_orden = models.DateField()
+    fecha_entrega = models.DateField(default=timezone.now().date())
+    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, default=0)
+    descripcion = models.CharField(max_length=400, default="")
+    def __str__(self):
+        return self.solicitud.fecha
+    
 class Detalles_Solicitud(models.Model):
     solicitud = models.ForeignKey(Solicitud, related_name='detalles_solicitud', on_delete=models.CASCADE)
     catalogo = models.ForeignKey(Catalogo, on_delete=models.CASCADE, default=0)
@@ -74,13 +89,6 @@ class Detalles_Solicitud(models.Model):
         if self.producto and self.nombre_producto_personalizado:
             raise ValidationError("Solo puedes proporcionar un producto del catálogo o un nombre personalizado, no ambos.")
 
-class Orden_Salida(models.Model):
-    fecha_orden = models.DateField()
-    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, default=0)
-    descripcion = models.CharField(max_length=400, default="")
-    def __str__(self):
-        return self.solicitud.fecha
-    
 
 class Detalle_Salida(models.Model):
     orden = models.ForeignKey(Orden_Salida, related_name='detalles_salida', on_delete=models.CASCADE)
@@ -98,11 +106,6 @@ class Detalle_Vale(models.Model):
     personalizado = models.CharField(max_length=100, null=True, blank=True)
     cantidad = models.IntegerField()
 
-
-class CustomUser(AbstractUser):
-    area = models.CharField(max_length=50, default="")
-    modulo = models.CharField(max_length=50, default="")
-    persona_nombre = models.CharField(max_length=50, default="")
 
 
 

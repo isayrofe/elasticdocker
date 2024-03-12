@@ -91,19 +91,47 @@ class DetalleSolicitudSerializer(serializers.ModelSerializer):
         model = Detalles_Solicitud
         fields = ['id_Detalle_Solicitud','catalogo', 'producto_personalizado', 'cantidad', 'nombre_articulo', 'tipo_unidad']
         #fields = '__all__'
-
-class SolicitudSerializer(serializers.ModelSerializer):
+class SolicitudCombinadaSerializer(serializers.ModelSerializer):
     detalles_solicitud = DetalleSolicitudSerializer(many=True)
-    id_solicitud = serializers.IntegerField(source='id', required=False, read_only=True)
-    
+    detalles_entrada = DetalleEntradaSerializer(many=True)
 
     class Meta:
         model = Solicitud
-        fields = ['id_solicitud','fecha','tipo', 'estado', 'descripcion', 'detalles_solicitud']
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        detalles_solicitud = representation.pop('detalles_solicitud')
+        detalles_entrada = representation.pop('detalles_entrada')
+
+        # Combina los detalles en una sola lista
+        detalles_combinados = detalles_solicitud + detalles_entrada
+        representation['detalles_combinados'] = detalles_combinados
+
+        return representation
+class SolicitudSerializer(serializers.ModelSerializer):
+    detalles_solicitud = DetalleSolicitudSerializer(many=True)
+    #detalles = SolicitudCombinadaSerializer(many=True)
+    id_solicitud = serializers.IntegerField(source='id', required=False, read_only=True)
+    area = serializers.CharField(source='usuario.area', required=False, read_only=True)
+    responsable = serializers.CharField(source='usuario.persona_nombre', required=False, read_only=True)
+    nombre_usuario = serializers.CharField(source='usuario.username', required=False, read_only=True)
+
+    class Meta:
+        model = Solicitud
+        fields = ['id_solicitud','fecha','tipo', 'estado','usuario','nombre_usuario', 'descripcion', 'area', 'responsable', 'detalles_solicitud']
 
     def create(self, validated_data):
         detalles_data = validated_data.pop('detalles_solicitud')  # Use the default related name
-        solicitud = Solicitud.objects.create(**validated_data)
+        if self.context['user'].is_anonymous:
+            usuario = 8
+        else:
+            usuario = self.context['user'].id
+
+        usuario_instance = CustomUser.objects.get(id=usuario)
+        # validated_data.pop('usuario')  # Elimina 'usuario' de validated_data
+        solicitud = Solicitud.objects.create(usuario=usuario_instance, **validated_data)  # Asocia el usuario a la solicitud
+        # solicitud = Solicitud.objects.create(**validated_data)
         for detalle_data in detalles_data:
             Detalles_Solicitud.objects.create(solicitud=solicitud, **detalle_data)
         return solicitud
@@ -136,6 +164,7 @@ class SolicitudSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
 
 class DetalleValeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -179,3 +208,26 @@ class UsuariosSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = '__all__'
+
+
+
+class DetalleSolicitudesSerializer(serializers.Serializer):
+    id_Detalle_Solicitud = serializers.IntegerField()
+    catalogo = serializers.IntegerField()
+    producto_personalizado = serializers.CharField(allow_null=True)
+    cantidad = serializers.IntegerField()
+    nombre_articulo = serializers.CharField()
+    cantidad_orden_salida = serializers.IntegerField()
+    fecha_orden_salida = serializers.DateField()
+
+class SolicitudesSerializer(serializers.Serializer):
+    id_solicitud = serializers.IntegerField()
+    fecha = serializers.DateField()
+    tipo = serializers.CharField()
+    estado = serializers.CharField()
+    usuario = serializers.IntegerField()
+    nombre_usuario = serializers.CharField()
+    descripcion = serializers.CharField()
+    area = serializers.CharField()
+    responsable = serializers.CharField()
+    detalles_solicitud = DetalleSolicitudesSerializer(many=True)

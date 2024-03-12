@@ -2,26 +2,40 @@ import os
 
 LOGGING = {
     "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+    "disable_existing_loggers": True,
+    'handlers': {
+    'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
         },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": "cambios.log",
-            "formatter": "standard",
+        'elasticapm': {
+            'level': 'WARNING',
+            'class': 'elasticapm.contrib.django.handlers.LoggingHandler',
         },
+
     },
     "formatters": {
-        "standard": {
-            "format": "%(asctime)s - %(levelname)s - %(message)s",
+        "verbose": {
+             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
     },
-    "loggers": {
-        "materiales": {
-            "handlers": ["file"],
-            "level": "INFO",
+    'loggers': {
+        'django.db.backends': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'inventario': {
+            'level': 'WARNING',
+            'handlers': ['elasticapm'],
+            'propagate': False,
+        },
+        # Log errors from the Elastic APM module to the console (recommended)
+        'elasticapm.errors': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
         },
     },
 }

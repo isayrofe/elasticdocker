@@ -23,7 +23,7 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
 #SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 CSRF_TRUSTED_ORIGINS = [
      'http://localhost:4500',
@@ -80,10 +80,9 @@ DATABASES = {
 
 ELASTIC_APM = {
     'SERVICE_NAME': 'django-inventarios',
-    'SERVER_URL': 'http://fleet-server:8200',
-    'SECRET_TOKEN': 'supersecrettoken',
+    'SERVER_URL': 'https://7a05313a665e4556aa96e43d3d90cd6a.apm.europe-west1.gcp.cloud.es.io:443',
+    'SECRET_TOKEN': 'yeIBn52AnBPoXPDV22',
     'ENVIRONMENT': 'development',
-    'DEBUG': True
 }
 
 AUTH_USER_MODEL = 'materiales.CustomUser'

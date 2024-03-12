@@ -30,6 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # TODO ALLOWED_HOSTS = []
 
 BASE_APPS =[
+    #'elasticapm.contrib.django',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,10 +42,10 @@ BASE_APPS =[
     'djoser',
     'materiales',
     'rest_framework_serializer_extensions',
-    #'activity_log',
+    'activity_log',
     #'rest_framework.authtoken',
     'django_filters',
-    'elasticapm.contrib.django',
+    
 
 ]
 LOCAL_APPS = [
@@ -59,7 +60,7 @@ THIRD_APPS = [
 INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS
 
 BASE_MIDDLEWARE = [
-    'elasticapm.contrib.django.middleware.TracingMiddleware',
+    #'elasticapm.contrib.django.middleware.TracingMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -69,7 +70,7 @@ BASE_MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'activity_log.middleware.ActivityLogMiddleware',
+    'activity_log.middleware.ActivityLogMiddleware',
     
 ]
 

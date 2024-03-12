@@ -1,0 +1,24 @@
+{
+    "bitoAI.codeCompletion.enableAutoCompletion": true,
+    "bitoAI.codeCompletion.enableCommentToCode": true,
+    "dataworkspace.excludedProjects": [
+        "172.80.8.188/172.80.8.188.sqlproj"
+    ],
+    "sqltools.connections": [
+        {
+            "mssqlOptions": {
+                "appName": "SQLTools",
+                "useUTC": true,
+                "encrypt": true
+            },
+            "previewLimit": 50,
+            "server": "172.80.8.188",
+            "port": 1433,
+            "driver": "MSSQL",
+            "name": "sicac",
+            "database": "sicac",
+            "username": "cotran",
+            "password": "sicac*2023"
+        }
+    ]
+}
